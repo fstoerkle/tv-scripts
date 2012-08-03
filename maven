@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+mvn = `which mvn`.strip
+
+
+options = []
+OptionParser.new do |opts|
+	opts.banner = "Usage: #{__FILE__} [options]"
+
+	opts.on "-t", "--no-tests", "Skip tests" do |t|
+		options << "-Dmaven.test.skip=true"
+	end
+
+	opts.on "-j", "--no-javadoc", "Skip javadoc generation" do |j|
+		options << "-Dmaven.javadoc.skip=true"
+	end
+end.parse!
+
+cmd = "#{mvn} clean install #{options.join ' '}"
+
+puts
+puts "========================================================================="
+puts "    #{cmd}"
+puts "========================================================================="
+puts
+puts
+
+IO.popen(cmd) do |io|
+	while line = io.gets do puts line end
+end

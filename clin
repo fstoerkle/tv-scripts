@@ -1,0 +1,11 @@
+#!/bin/bash
+
+OPTIONS="-Dmaven.test.skip=true -Dmaven.javadoc.skip=true"
+WORKSPACE="$HOME/Workspace/travelviva"
+
+if [ -z $1 ] ; then
+	mvn clean install $OPTIONS
+else
+	cd "$WORKSPACE/$1" && "$0" && cd -
+fi
+
