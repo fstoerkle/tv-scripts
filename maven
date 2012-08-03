@@ -5,20 +5,23 @@ require 'optparse'
 mvn = `which mvn`.strip
 
 
-options = []
+options = {
+  :skip_tests	=> "-Dmaven.test.skip=true",
+  :skip_javadoc	=> "-Dmaven.javadoc.skip=true"
+}
 OptionParser.new do |opts|
 	opts.banner = "Usage: #{__FILE__} [options]"
 
-	opts.on "-t", "--no-tests", "Skip tests" do |t|
-		options << "-Dmaven.test.skip=true"
-	end
+  opts.on "-t", "--tests", "Run tests" do |t|
+    options.delete :skip_tests
+  end
 
-	opts.on "-j", "--no-javadoc", "Skip javadoc generation" do |j|
-		options << "-Dmaven.javadoc.skip=true"
+	opts.on "-j", "--javadoc", "Generate javadoc" do |j|
+    options.delete :skip_javadoc
 	end
 end.parse!
 
-cmd = "#{mvn} clean install #{options.join ' '}"
+cmd = "#{mvn} clean install #{options.values.join ' '}"
 
 puts
 puts "========================================================================="
