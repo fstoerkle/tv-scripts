@@ -1,14 +1,41 @@
 #!/usr/bin/env ruby
 
+# Documentation
+# http://www.mkyong.com/maven/how-to-display-maven-plugin-goals-and-parameters/
+# http://ruby-doc.org/stdlib-1.9.3/libdoc/optparse/rdoc/OptionParser.html
+
 require 'optparse'
 
-mvn = `which mvn`.strip
+def maven(params)
+  cmd = "#{`which mvn`.strip} #{params}"
+  puts
+  puts "=========================================================================================="
+  puts "  >> #{cmd}"
+  puts "=========================================================================================="
+  puts
+  puts
+  IO.popen(cmd) { |io| while line = io.gets do puts line end }
+end
 
+if ARGV.length == 2 && ARGV[0] == "help"
+  params = "help:describe -Dplugin="
+
+  if ARGV[1].include? ":"
+    (plugin, goal) = ARGV[1].split ":"
+    params += "#{plugin} -Dmojo=#{goal} -Dfull=true"
+  else
+    params += ARGV[1]
+  end
+
+  maven params
+  exit
+end
 
 options = {
   :skip_tests	=> "-Dmaven.test.skip=true",
   :skip_javadoc	=> "-Dmaven.javadoc.skip=true"
 }
+
 OptionParser.new do |opts|
 	opts.banner = "Usage: #{__FILE__} [options]"
 
@@ -21,15 +48,6 @@ OptionParser.new do |opts|
 	end
 end.parse!
 
-cmd = "#{mvn} clean install #{options.values.join ' '}"
+maven "clean install #{options.values.join ' '}"
 
-puts
-puts "========================================================================="
-puts "    #{cmd}"
-puts "========================================================================="
-puts
-puts
 
-IO.popen(cmd) do |io|
-	while line = io.gets do puts line end
-end
