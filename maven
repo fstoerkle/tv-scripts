@@ -17,6 +17,11 @@ def maven(params)
   IO.popen(cmd) { |io| while line = io.gets do puts line end }
 end
 
+if ARGV.length == 1 && ARGV[0] == "run"
+  maven "jetty:run"
+  exit
+end
+
 if ARGV.length == 2 && ARGV[0] == "help"
   params = "help:describe -Dplugin="
 
