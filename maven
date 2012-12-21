@@ -17,9 +17,14 @@ def maven(params)
   IO.popen(cmd) { |io| while line = io.gets do puts line end }
 end
 
-if ARGV.length == 1 && ARGV[0] == "run"
-  maven "jetty:run"
-  exit
+if ARGV.length == 1
+  if ARGV[0] == "run"
+    maven "jetty:run"
+    exit
+  elsif ARGV[0] == "run-deployment"
+    maven "jetty:run -Dwicket.configuration=deployment"
+    exit
+  end
 end
 
 if ARGV.length == 2 && ARGV[0] == "help"
