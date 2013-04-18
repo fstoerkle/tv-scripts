@@ -1,0 +1,2 @@
+#!/bin/sh
+nohup /home/florian/Software/SublimeText2/sublime_text $1 >/dev/null 2>&1 &
