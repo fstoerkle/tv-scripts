@@ -6,58 +6,72 @@
 
 require 'optparse'
 
-def maven(params)
-  cmd = "#{`which mvn`.strip} #{params}"
-  puts
-  puts "=========================================================================================="
-  puts "  >> #{cmd}"
-  puts "=========================================================================================="
-  puts
-  puts
+def run_in_shell(cmd)
   IO.popen(cmd) { |io| while line = io.gets do puts line end }
 end
 
-if ARGV.length == 1
+def maven(params, exit_after_run=true)
+  cmd = "#{`which mvn`.strip} #{params}"
+  puts
+  puts "==================================================================================================="
+  puts "  >> #{cmd}"
+  puts "==================================================================================================="
+  puts
+  puts
+  run_in_shell cmd
+  exit if exit_after_run
+end
+
+
+def parse_commands(opts)
   if ARGV[0] == "run"
     maven "jetty:run"
-    exit
   elsif ARGV[0] == "run-deployment"
     maven "jetty:run -Dwicket.configuration=deployment"
-    exit
+  elsif ARGV[0] == "help"
+    opts.abort "[ERROR] The 'help' command needs a parameter (e.g. '#{opts.program_name} help jetty' or '#{opts.program_name} help jetty:run')" if ARGV[1].nil?
+
+    if ARGV[1].include? ":"
+      (plugin, goal) = ARGV[1].split ":"
+      params = "#{plugin} -Dmojo=#{goal} -Dfull=true"
+    else
+      params = ARGV[1]
+    end
+
+    maven "help:describe -Dplugin=#{params}"
   end
 end
 
-if ARGV.length == 2 && ARGV[0] == "help"
-  params = "help:describe -Dplugin="
 
-  if ARGV[1].include? ":"
-    (plugin, goal) = ARGV[1].split ":"
-    params += "#{plugin} -Dmojo=#{goal} -Dfull=true"
-  else
-    params += ARGV[1]
-  end
 
-  maven params
-  exit
-end
-
-options = {
-  :skip_tests	=> "-Dmaven.test.skip=true",
-  :skip_javadoc	=> "-Dmaven.javadoc.skip=true"
+OPTIONS = {
+  :skip_tests	=> { :enabled => true, :param => "-Dmaven.test.skip=true" },
+  :skip_javadoc	=> { :enabled => true, :param => "-Dmaven.javadoc.skip=true" }
 }
 
-OptionParser.new do |opts|
+
+# exits if a correct command was specified
+parse_commands(OptionParser.new do |opts|
 	opts.banner = "Usage: #{__FILE__} [options]"
 
+  opts.abort "[ERROR] Current directory is not a maven project (no pom.xml found)" unless File.exists? "pom.xml"
+
   opts.on "-t", "--tests", "Run tests" do |t|
-    options.delete :skip_tests
+    OPTIONS[:skip_tests][:enabled] = false
+
   end
 
 	opts.on "-j", "--javadoc", "Generate javadoc" do |j|
-    options.delete :skip_javadoc
+    OPTIONS[:skip_javadoc][:enabled] = false
 	end
-end.parse!
 
-maven "clean install #{options.values.join ' '}"
+end.parse!)
+
+maven_options = []
+for x, option in OPTIONS.reject { |k,v| not v[:enabled] }
+  maven_options << option[:param] 
+end
+
+maven "clean install #{maven_options.join(' ')}"
 
 
